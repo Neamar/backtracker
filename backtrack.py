@@ -1,5 +1,6 @@
-import random
 # -*- coding: utf-8 -*-
+import random
+
 # First dimension (rows): corporation
 # Second dimension (columns): market
 grid = [
@@ -52,7 +53,7 @@ def match_constraint(grid):
 
 
 def backtracker(grid, cell):
-    if cell > 100:
+    if cell > 99:
         return
 
     id_corpo, id_market = cell_to_corpo_market(cell)
@@ -66,13 +67,17 @@ def backtracker(grid, cell):
     if is_match:
         # We're done
         display_grid(grid)
+        return True
     elif is_match is None:
         # Not enough data yet
-        backtracker(grid, cell + 1)
+        if backtracker(grid, cell + 1):
+            # There was a solution, let's now see if there is another one
+            grid[id_corpo][id_market] = 0
+            return backtracker(grid, cell + 1)
     else:
         # Won't work, let's try something else
         grid[id_corpo][id_market] = 0
-        backtracker(grid, cell + 1)
+        return backtracker(grid, cell + 1)
 
 
 def display_grid(grid):
