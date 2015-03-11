@@ -91,7 +91,7 @@ def display_grid(grid):
     print "--------------------------"
     print "## SOLUTION %s" % solutions_count
     for corpo in grid:
-        print corpo
+        print corpo, sum(corpo)
     print "--------------------------"
 
 
