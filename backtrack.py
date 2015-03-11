@@ -22,7 +22,10 @@ def cell_to_corpo_market(cell):
     return (cell / 10, cell % 10)
 
 
-base_allowed = [0, 0, 0, 2, 4, 3, 1, 0, 0, 0, 0]
+# Number of corporation with 0 market, 1 market, ...
+base_market_allowed = [0, 0, 0, 2, 4, 3, 1, 0, 0, 0, 0]
+# Number of markets with 0 corpo, 1 corpo, 2 corpo, ...
+base_corpo_allowed = [0, 0, 0, 1, 6, 2, 1, 0, 0, 0, 0]
 
 
 def market_constraint(grid):
@@ -35,7 +38,28 @@ def market_constraint(grid):
         nb_markets = sum(corpo)
         if nb_markets >= len(allowed):
             return False
-        if nb_markets == 0 or base_allowed[nb_markets] == 0:
+        if nb_markets == 0 or base_market_allowed[nb_markets] == 0:
+            continue
+        allowed[nb_markets] -= 1
+        if allowed[nb_markets] < 0:
+            return False
+    if sum(allowed) == 0:
+        return True
+    else:
+        return None
+
+
+def corpo_constraint(grid):
+    # 1 corpos à 6
+    # 2 corpos à 5
+    # 6 corpos à 4 marchés
+    # 1 corpo à 3
+    allowed = [0, 0, 0, 1, 6, 2, 1]
+    for corpo in grid:
+        nb_markets = sum(corpo)
+        if nb_markets >= len(allowed):
+            return False
+        if nb_markets == 0 or base_corpo_allowed[nb_markets] == 0:
             continue
         allowed[nb_markets] -= 1
         if allowed[nb_markets] < 0:
@@ -50,7 +74,12 @@ def match_constraint(grid):
     """
     return True if the grid is valid
     """
-    return market_constraint(grid)
+    constraints = (market_constraint(grid),)
+    if False in constraints:
+        return False
+    if None in constraints:
+        return None
+    return True
 
 
 def backtracker(grid, cell):
