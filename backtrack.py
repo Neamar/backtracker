@@ -15,6 +15,7 @@ grid = [
     [0] * 10,
     [0] * 10
 ]
+solutions_count = 0
 
 
 def cell_to_corpo_market(cell):
@@ -67,13 +68,17 @@ def backtracker(grid, cell):
     if is_match:
         # We're done
         display_grid(grid)
+        grid[id_corpo][id_market] = 0
         return True
     elif is_match is None:
-        # Not enough data yet
+        # Not enough data yet, try adding more 1
         if backtracker(grid, cell + 1):
             # There was a solution, let's now see if there is another one
+            # with a 0 on this cell
             grid[id_corpo][id_market] = 0
-            return backtracker(grid, cell + 1)
+            backtracker(grid, cell + 1)
+            # But anyway, we have to return True cause we had a solution
+            return True
     else:
         # Won't work, let's try something else
         grid[id_corpo][id_market] = 0
@@ -81,7 +86,10 @@ def backtracker(grid, cell):
 
 
 def display_grid(grid):
+    global solutions_count
+    solutions_count += 1
     print "--------------------------"
+    print "## SOLUTION %s" % solutions_count
     for corpo in grid:
         print corpo
     print "--------------------------"
