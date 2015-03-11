@@ -1,25 +1,17 @@
 # -*- coding: utf-8 -*-
-import random
 
 # First dimension (rows): corporation
 # Second dimension (columns): market
-grid = [
-    [0] * 10,
-    [0] * 10,
-    [0] * 10,
-    [0] * 10,
-    [0] * 10,
-    [0] * 10,
-    [0] * 10,
-    [0] * 10,
-    [0] * 10,
-    [0] * 10
-]
+grid = [0] * 100
 solutions_count = 0
 
 
-def cell_to_corpo_market(cell):
-    return (cell / 10, cell % 10)
+def corpos_list(grid):
+    return (grid[i:i+10] for i in range(0, 100, 10))
+
+
+# def market_list(grid):
+#     return (grid[i:i+10] for i in range(0, 9))
 
 
 # Number of corporation with 0 market, 1 market, ...
@@ -34,7 +26,7 @@ def market_constraint(grid):
     # 4 marchés à 4 corpos
     # 2 marchés à 3
     allowed = [0, 0, 0, 2, 4, 3, 1]
-    for corpo in grid:
+    for corpo in corpos_list(grid):
         nb_markets = sum(corpo)
         if nb_markets >= len(allowed):
             return False
@@ -49,25 +41,25 @@ def market_constraint(grid):
         return None
 
 
-def corpo_constraint(grid):
-    # 1 corpos à 6
-    # 2 corpos à 5
-    # 6 corpos à 4 marchés
-    # 1 corpo à 3
-    allowed = [0, 0, 0, 1, 6, 2, 1]
-    for corpo in grid:
-        nb_markets = sum(corpo)
-        if nb_markets >= len(allowed):
-            return False
-        if nb_markets == 0 or base_corpo_allowed[nb_markets] == 0:
-            continue
-        allowed[nb_markets] -= 1
-        if allowed[nb_markets] < 0:
-            return False
-    if sum(allowed) == 0:
-        return True
-    else:
-        return None
+# def corpo_constraint(grid):
+#     # 1 corpos à 6
+#     # 2 corpos à 5
+#     # 6 corpos à 4 marchés
+#     # 1 corpo à 3
+#     allowed = [0, 0, 0, 1, 6, 2, 1]
+#     for corpo in corpos_list(grid):
+#         nb_markets = sum(corpo)
+#         if nb_markets >= len(allowed):
+#             return False
+#         if nb_markets == 0 or base_corpo_allowed[nb_markets] == 0:
+#             continue
+#         allowed[nb_markets] -= 1
+#         if allowed[nb_markets] < 0:
+#             return False
+#     if sum(allowed) == 0:
+#         return True
+#     else:
+#         return None
 
 
 def match_constraint(grid):
@@ -86,8 +78,7 @@ def backtracker(grid, cell):
     if cell > 99:
         return
 
-    id_corpo, id_market = cell_to_corpo_market(cell)
-    grid[id_corpo][id_market] = 1
+    grid[cell] = 1
 
     is_match = match_constraint(grid)
     # display_grid(grid)
@@ -97,20 +88,20 @@ def backtracker(grid, cell):
     if is_match:
         # We're done
         display_grid(grid)
-        grid[id_corpo][id_market] = 0
+        grid[cell] = 0
         return True
     elif is_match is None:
         # Not enough data yet, try adding more 1
         if backtracker(grid, cell + 1):
             # There was a solution, let's now see if there is another one
             # with a 0 on this cell
-            grid[id_corpo][id_market] = 0
+            grid[cell] = 0
             backtracker(grid, cell + 1)
             # But anyway, we have to return True cause we had a solution
             return True
     else:
         # Won't work, let's try something else
-        grid[id_corpo][id_market] = 0
+        grid[cell] = 0
         return backtracker(grid, cell + 1)
 
 
@@ -119,7 +110,7 @@ def display_grid(grid):
     solutions_count += 1
     print "--------------------------"
     print "## SOLUTION %s" % solutions_count
-    for corpo in grid:
+    for corpo in corpos_list(grid):
         print corpo, sum(corpo)
     print "--------------------------"
 
