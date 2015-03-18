@@ -16,14 +16,22 @@
 # qui a trois liens avec les corpos à 5
 
 # # PROBLEM DEFINITION
-corporation_count = 10
-market_count = 10
+corporation_count = 4
+market_count = 4
 # Number of corporation with 0 market, 1 market, ...
 base_market_allowed = (0, 0, 0, 2, 4, 3, 1, 0, 0, 0, 0)
+base_market_allowed = (0, 1, 1, 1, 1)
 # Number of markets with 0 corpo, 1 corpo, 2 corpo, ...
 base_corpo_allowed = (0, 0, 0, 1, 6, 2, 1, 0, 0, 0, 0)
+base_corpo_allowed = (0, 1, 1, 1, 1)
 
 # USEFUL CONSTANTS
+if len(base_corpo_allowed) != market_count + 1:
+    raise "Invalid base corpo allowed"
+
+if len(base_market_allowed) != corporation_count + 1:
+    raise "Invalid base market allowed"
+
 grid_size = corporation_count * market_count
 # First dimension (rows): corporation
 # Second dimension (columns): market
@@ -35,9 +43,9 @@ max_markets_per_corpo = max(
     if nb_markets > 0
 ) + 1
 max_corpos_per_market = max(
-    i for i, nb_markets
-    in enumerate(base_market_allowed)
-    if nb_markets > 0
+    i for i, nb_corpos
+    in enumerate(base_corpo_allowed)
+    if nb_corpos > 0
 ) + 1
 
 
@@ -67,7 +75,7 @@ def market_constraint(grid):
         market_allowed[nb_markets] -= 1
         if market_allowed[nb_markets] < 0:
             return False
-    if sum(market_allowed) == 0:
+    if max(market_allowed) == 0:
         return True
     else:
         return None
@@ -88,7 +96,7 @@ def corpo_constraint(grid):
         corpo_allowed[nb_corpos] -= 1
         if corpo_allowed[nb_corpos] < 0:
             return False
-    if sum(corpo_allowed) == 0:
+    if max(corpo_allowed) == 0:
         return True
     else:
         return None
@@ -100,7 +108,7 @@ def match_constraint(grid):
     False if invalid
     None if not concluding yet
     """
-    constraints = (market_constraint(grid),)
+    constraints = (market_constraint(grid), corpo_constraint(grid))
     if False in constraints:
         return False
     if None in constraints:
@@ -114,14 +122,15 @@ def backtracker(grid, cell):
 
     grid[cell] = 1
 
-    is_match = match_constraint(grid)
+    is_match = market_constraint(grid)
     # display_grid(grid)
     # print is_match
     # print "###"
     # print
     if is_match:
-        # We're done
-        display_grid(grid)
+        if match_constraint(grid):
+            # We're done
+            display_grid(grid)
         grid[cell] = 0
         return True
     elif is_match is None:
