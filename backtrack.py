@@ -1,23 +1,45 @@
 # -*- coding: utf-8 -*-
 
-# First dimension (rows): corporation
-# Second dimension (columns): market
-grid = [0] * 100
-solutions_count = 0
+# CONSTRAINTS
+# 1 corpo dans 6 marchés
+# 3 corpos dans 5
+# 4 corpos dans 4
+# 2 corpos dans 3
 
+# 1 marché dans 6 corpo
+# 2 marchés dans 5
+# 6 marchés dans 4
+# 1 marchés dans 3 corpo
 
-def corpos_list(grid):
-    return (grid[i:i+10] for i in range(0, 100, 10))
+# Toutes les corpos ont minimum 1 marché en commun,
+# pas plus que 2 sauf la corpo qui a 6
+# qui a trois liens avec les corpos à 5
 
-
-def market_list(grid):
-    return (grid[i:100:10] for i in range(0, 10))
-
+## PROBLEM DEFINITION
+corporation_count = 10
+market_count = 10
+grid_size = corporation_count * market_count
 
 # Number of corporation with 0 market, 1 market, ...
 base_market_allowed = (0, 0, 0, 2, 4, 3, 1, 0, 0, 0, 0)
 # Number of markets with 0 corpo, 1 corpo, 2 corpo, ...
 base_corpo_allowed = (0, 0, 0, 1, 6, 2, 1, 0, 0, 0, 0)
+
+# First dimension (rows): corporation
+# Second dimension (columns): market
+grid = [0] * grid_size
+solutions_count = 0
+
+
+def corpos_list(grid):
+    return (grid[i:i+market_count] for i in range(0, grid_size, market_count))
+
+
+def market_list(grid):
+    return (
+        grid[i:grid_size:corporation_count]
+        for i in range(0, corporation_count)
+    )
 
 
 def market_constraint(grid):
@@ -77,7 +99,7 @@ def match_constraint(grid):
 
 
 def backtracker(grid, cell):
-    if cell > 99:
+    if cell > grid_size - 1:
         return
 
     grid[cell] = 1
