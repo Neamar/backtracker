@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from itertools import permutations
 
 # CONSTRAINTS
 # 1 corpo dans 6 marchés
@@ -26,10 +27,10 @@ base_corpo_allowed = (0, 0, 0, 1, 6, 2, 1, 0, 0, 0, 0)
 base_corpo_allowed = (0, 1, 1, 1, 1)
 
 # USEFUL CONSTANTS
-if len(base_corpo_allowed) != market_count + 1:
+if len(base_corpo_allowed) != market_count + 1 or sum(base_corpo_allowed) != corporation_count:
     raise "Invalid base corpo allowed"
 
-if len(base_market_allowed) != corporation_count + 1:
+if len(base_market_allowed) != corporation_count + 1 or sum(base_market_allowed) != market_count:
     raise "Invalid base market allowed"
 
 grid_size = corporation_count * market_count
@@ -116,41 +117,6 @@ def match_constraint(grid):
     return True
 
 
-def backtracker(grid, cell):
-    if cell > grid_size - 1:
-        return
-
-    grid[cell] = 1
-
-    is_match = market_constraint(grid)
-    # display_grid(grid)
-    # print is_match
-    # print "###"
-    # print
-    if is_match:
-        if match_constraint(grid):
-            # We're done
-            display_grid(grid)
-        grid[cell] = 0
-        return True
-    elif is_match is None:
-        # Not enough data yet, try adding more 1
-        if backtracker(grid, cell + 1):
-            # There was a solution, let's now see if there is another one
-            # with a 0 on this cell
-            grid[cell] = 0
-            backtracker(grid, cell + 1)
-            # But anyway, we have to return True cause we had a solution
-            return True
-        else:
-            grid[cell] = 0
-            return backtracker(grid, cell + 1)
-    else:
-        # Won't work, let's try something else
-        grid[cell] = 0
-        return backtracker(grid, cell + 1)
-
-
 def display_grid(grid):
     global solutions_count
     solutions_count += 1
@@ -161,4 +127,28 @@ def display_grid(grid):
     print "--------------------------"
 
 
-backtracker(grid, 0)
+def base_grid_generator():
+    # Generates all valid grids matching corporation constraints only
+    lines = []
+    for i, count in enumerate(base_market_allowed):
+        for j in range(count):
+            line = ([1] * i)
+            line.extend([0] * (corporation_count - i))
+            lines.append(line)
+
+    for lines_permutation in permutations(lines):
+        # We have all valid permutations for lines,
+        # now we need to permute all columns
+        for i, line in enumerate(lines_permutation):
+            for line_variation in permutations(line):
+                grid = []
+                for l in lines_permutation[0:i]:
+                    grid += l
+                grid += line_variation
+                for l in lines_permutation[i + 1:len(lines)]:
+                    grid += l
+                yield grid
+
+for grid in base_grid_generator():
+    if match_constraint(grid):
+        display_grid(grid)
