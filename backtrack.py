@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from itertools import permutations
+import math
 
 # CONSTRAINTS
 # 1 corpo dans 6 marchés
@@ -19,10 +20,10 @@ from itertools import permutations
 # # PROBLEM DEFINITION
 # Number of corporation with 0 market, 1 market, ...
 corporations_with_n_markets = (0, 0, 0, 2, 4, 3, 1, 0, 0, 0, 0)
-corporations_with_n_markets = (0, 1, 1, 1, 1)
+# corporations_with_n_markets = (0, 1, 1, 1, 1)
 # Number of markets with 0 corpo, 1 corpo, 2 corpo, ...
 markets_with_n_corporations = (0, 0, 0, 1, 6, 2, 1, 0, 0, 0, 0)
-markets_with_n_corporations = (0, 1, 1, 1, 1)
+# markets_with_n_corporations = (0, 1, 1, 1, 1)
 
 # USEFUL CONSTANTS
 
@@ -43,6 +44,32 @@ max_corpos_per_market = max(
     in enumerate(markets_with_n_corporations)
     if nb_corpos > 0
 ) + 1
+
+
+class unique_element:
+    def __init__(self, value, occurrences):
+        self.value = value
+        self.occurrences = occurrences
+
+
+def perm_unique(elements):
+    eset = set(elements)
+    listunique = [unique_element(i, elements.count(i)) for i in eset]
+    u = len(elements)
+    return perm_unique_helper(listunique, [0] * u, u - 1)
+
+
+def perm_unique_helper(listunique, result_list, d):
+    if d < 0:
+        yield tuple(result_list)
+    else:
+        for i in listunique:
+            if i.occurrences > 0:
+                result_list[d] = i.value
+                i.occurrences -= 1
+                for g in perm_unique_helper(listunique, result_list, d - 1):
+                    yield g
+                i.occurrences += 1
 
 
 def corpos_list(grid):
@@ -104,10 +131,10 @@ def match_constraint(grid):
     False if invalid
     None if not concluding yet
     """
-    constraints = (market_constraint(grid), corpo_constraint(grid))
-    if False in constraints:
+    constraint = corpo_constraint(grid)
+    if not constraint:
         return False
-    if None in constraints:
+    if constraint is None:
         return None
     return True
 
@@ -129,13 +156,20 @@ def base_grid_generator():
         for j in range(count):
             line = ([1] * i)
             line.extend([0] * (corporation_count - i))
-            lines.append(line)
+            lines.append(tuple(line))
 
-    for lines_permutation in permutations(lines):
+    total_permutation = len(list(perm_unique(lines)))
+    progress = 0
+    for lines_permutation in perm_unique(lines):
+        progress += 1
+        # if progress > 200:
+        #     exit()
+        if progress % 500 == 0:
+            print "STEP %s of %s" % (progress, total_permutation)
         # We have all valid permutations for lines,
         # now we need to permute all columns
         for i, line in enumerate(lines_permutation):
-            for line_variation in permutations(line):
+            for line_variation in perm_unique(line):
                 grid = []
                 for l in lines_permutation[0:i]:
                     grid += l
@@ -145,5 +179,6 @@ def base_grid_generator():
                 yield grid
 
 for grid in base_grid_generator():
+    # display_grid(grid)
     if match_constraint(grid):
         display_grid(grid)
