@@ -20,10 +20,10 @@ import math
 # # PROBLEM DEFINITION
 # Number of corporation with 0 market, 1 market, ...
 corporations_with_n_markets = (0, 0, 0, 2, 4, 3, 1, 0, 0, 0, 0)
-# corporations_with_n_markets = (0, 1, 1, 1, 1)
+# corporations_with_n_markets = (0, 1, 2, 0, 1)
 # Number of markets with 0 corpo, 1 corpo, 2 corpo, ...
 markets_with_n_corporations = (0, 0, 0, 1, 6, 2, 1, 0, 0, 0, 0)
-# markets_with_n_corporations = (0, 1, 1, 1, 1)
+# markets_with_n_corporations = (0, 1, 2, 0, 1)
 
 # USEFUL CONSTANTS
 
@@ -110,6 +110,7 @@ def corpo_constraint(grid):
     # 6 corpos à 4 marchés
     # 1 corpo à 3
     corpo_allowed = list(markets_with_n_corporations)
+
     for market in market_list(grid):
         nb_corpos = sum(market)
         if nb_corpos >= max_markets_per_corpo:
@@ -132,11 +133,7 @@ def match_constraint(grid):
     None if not concluding yet
     """
     constraint = corpo_constraint(grid)
-    if not constraint:
-        return False
-    if constraint is None:
-        return None
-    return True
+    return constraint
 
 
 def display_grid(grid):
@@ -162,13 +159,22 @@ def base_grid_generator():
     progress = 0
     for lines_permutation in perm_unique(lines):
         progress += 1
-        # if progress > 200:
-        #     exit()
         if progress % 500 == 0:
             print "STEP %s of %s" % (progress, total_permutation)
         # We have all valid permutations for lines,
         # now we need to permute all columns
         for i, line in enumerate(lines_permutation):
+            # Ensure we're not totally doomed
+            grid = []
+            for l in lines_permutation[0:i]:
+                grid += l
+            grid += [0] * len(line)
+            for l in lines_permutation[i + 1:len(lines)]:
+                grid += l
+            if not match_constraint(grid):
+                # We can't do anything with this permutation, go ahead.
+                continue
+
             for line_variation in perm_unique(line):
                 grid = []
                 for l in lines_permutation[0:i]:
@@ -179,6 +185,5 @@ def base_grid_generator():
                 yield grid
 
 for grid in base_grid_generator():
-    # display_grid(grid)
     if match_constraint(grid):
         display_grid(grid)
