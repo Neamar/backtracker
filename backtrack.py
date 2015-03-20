@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-from itertools import permutations
-import math
+
 
 # CONSTRAINTS
 # 1 corpo dans 6 marchés
@@ -20,10 +19,10 @@ import math
 # # PROBLEM DEFINITION
 # Number of corporation with 0 market, 1 market, ...
 corporations_with_n_markets = (0, 0, 0, 2, 4, 3, 1, 0, 0, 0, 0)
-# corporations_with_n_markets = (0, 1, 2, 0, 1)
+corporations_with_n_markets = (0, 1, 2, 0, 1)
 # Number of markets with 0 corpo, 1 corpo, 2 corpo, ...
 markets_with_n_corporations = (0, 0, 0, 1, 6, 2, 1, 0, 0, 0, 0)
-# markets_with_n_corporations = (0, 1, 2, 0, 1)
+markets_with_n_corporations = (0, 1, 2, 0, 1)
 
 # USEFUL CONSTANTS
 
@@ -155,35 +154,39 @@ def base_grid_generator():
             line.extend([0] * (corporation_count - i))
             lines.append(tuple(line))
 
-    total_permutation = len(list(perm_unique(lines)))
-    progress = 0
-    for lines_permutation in perm_unique(lines):
-        progress += 1
-        if progress % 500 == 0:
-            print "STEP %s of %s" % (progress, total_permutation)
-        # We have all valid permutations for lines,
-        # now we need to permute all columns
-        for i, line in enumerate(lines_permutation):
-            # Ensure we're not totally doomed
-            grid = []
-            for l in lines_permutation[0:i]:
-                grid += l
-            grid += [0] * len(line)
-            for l in lines_permutation[i + 1:len(lines)]:
-                grid += l
-            if not match_constraint(grid):
-                # We can't do anything with this permutation, go ahead.
-                continue
+    for grid in column_permutator(lines, 0):
+        yield grid
 
-            for line_variation in perm_unique(line):
-                grid = []
-                for l in lines_permutation[0:i]:
-                    grid += l
-                grid += line_variation
-                for l in lines_permutation[i + 1:len(lines)]:
-                    grid += l
+
+def column_permutator(lines_permutation, line_index):
+    # We need to permute all columns
+    if line_index < corporation_count:
+        line = lines_permutation[line_index]
+
+        permutations = list(perm_unique(line))
+        # Only run on first half, symetric after
+        permutations = permutations[0:len(permutations) / 2 + 1]
+
+        for i, line_variation in enumerate(permutations):
+            if line_index < 8:
+                print "%s : %s / %s" % (line_index, i, len(permutations))
+            new_lines_permutation = list(lines_permutation)
+            new_lines_permutation[line_index] = line_variation
+
+            next_columns = column_permutator(
+                new_lines_permutation,
+                line_index + 1
+            )
+            for grid in next_columns:
                 yield grid
+    else:
+        grid = []
+        for l in lines_permutation:
+            grid += l
+        yield grid
 
-for grid in base_grid_generator():
-    if match_constraint(grid):
-        display_grid(grid)
+
+if __name__ == "__main__":
+    for grid in base_grid_generator():
+        if match_constraint(grid):
+            display_grid(grid)
